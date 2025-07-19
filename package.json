@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --inspect server.js",
-    "http": "set MCP_MODE=http&& set MCP_PORT=5555&& node server.js"
+    "http": "set MCP_PORT=5555&& node server.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

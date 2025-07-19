@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import axios from 'axios';
 import { config } from 'dotenv';
@@ -500,12 +498,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 // Start MCP server with proper error handling
 async function main() {
-  const mcpMode = process.env.MCP_MODE || 'stdio';
   const port = process.env.MCP_PORT || 5555;
   
   try {
-    if (mcpMode === 'http') {
-      console.error(`Starting MCP server in HTTP mode on port ${port}...`);
+    console.error(`Starting MCP server in HTTP mode on port ${port}...`);
       
       const app = express();
       app.use(cors());
@@ -848,46 +844,6 @@ async function main() {
         }
         process.exit(0);
       });
-      
-    } else {
-      console.error('Starting MCP server in stdio mode...');
-      console.error('Creating stdio transport...');
-      
-      const transport = new StdioServerTransport();
-      
-      console.error('Connecting server to transport...');
-      await server.connect(transport);
-      
-      console.error('Social Media Content MCP Server started successfully');
-      console.error(`Available content platforms: ${Object.keys(PLATFORMS).join(', ')}`);
-      console.error(`Available publishing platforms: ${Object.keys(PUBLISHING_PLATFORMS).join(', ')}`);
-      console.error(`N8N webhook URL: ${N8N_CONFIG.webhookURL}`);
-      console.error('Server ready for MCP connections...');
-      
-      setInterval(() => {
-        // Keep alive
-      }, 30000);
-      
-      process.on('SIGINT', async () => {
-        console.error('Received SIGINT, shutting down gracefully...');
-        try {
-          await server.close();
-        } catch (err) {
-          console.error('Error closing server:', err);
-        }
-        process.exit(0);
-      });
-      
-      process.on('SIGTERM', async () => {
-        console.error('Received SIGTERM, shutting down gracefully...');
-        try {
-          await server.close();
-        } catch (err) {
-          console.error('Error closing server:', err);
-        }
-        process.exit(0);
-      });
-    }
     
   } catch (error) {
     console.error('Failed to start MCP server:', error);
