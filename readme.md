@@ -44,7 +44,6 @@ N8N_WEBHOOK_URL=your_n8n_webhook_url_here
 
 # MCP Server Configuration
 MCP_PORT=5555
-MCP_MODE=http
 ```
 
 ### 3. Get RapidAPI Key
@@ -92,6 +91,8 @@ npm start
 ## 🤖 Using MCP Server in Claude
 
 ![Claude Example Chat](images/claude-example-chat.png)
+
+![Claude Example Chat 2](images/claude-example-chat2.png)
 
 Once the MCP server is running and configured in Claude Desktop, you can use it with natural language commands:
 
