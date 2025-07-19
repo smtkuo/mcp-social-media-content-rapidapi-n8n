@@ -1,0 +1,735 @@
+{
+  "name": "Social Media Publisher",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "social-media-publisher",
+        "responseMode": "lastNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "1de07fcf-c6f4-40f9-b863-9c264d70dc7c",
+      "name": "Social Media Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1740,
+        120
+      ],
+      "webhookId": "social-media-publisher-webhook",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Validate webhook input for social media publishing\nconst webhookData = $json.body || $json;\n\n// Debug: Log incoming webhook data\nconsole.log('Social Media Webhook Data:', JSON.stringify(webhookData, null, 2));\n\n// Validate required fields\nif (!webhookData.platform) {\n  throw new Error('Missing required field: platform');\n}\nif (!webhookData.content) {\n  throw new Error('Missing required field: content');\n}\n\n// Validate platform\nconst supportedPlatforms = ['x', 'twitter', 'facebook', 'linkedin', 'instagram', 'telegram'];\nconst platform = webhookData.platform.toLowerCase().trim();\n\nif (!supportedPlatforms.includes(platform)) {\n  throw new Error(`Unsupported platform: ${platform}. Supported platforms: ${supportedPlatforms.join(', ')}`);\n}\n\n// Normalize platform names\nlet normalizedPlatform = platform;\nif (platform === 'twitter') {\n  normalizedPlatform = 'x';\n}\n\n// Validate content length based on platform\nconst content = webhookData.content.toString().trim();\nif (content.length === 0) {\n  throw new Error('Content cannot be empty');\n}\n\n// Platform-specific content length validation\nconst contentLimits = {\n  x: 280,\n  facebook: 63206,\n  linkedin: 3000,\n  instagram: 2200,\n  telegram: 4096\n};\n\nif (content.length > contentLimits[normalizedPlatform]) {\n  throw new Error(`Content too long for ${normalizedPlatform}. Max length: ${contentLimits[normalizedPlatform]}, current: ${content.length}`);\n}\n\nconsole.log(`✅ Validated input - Platform: ${normalizedPlatform}, Content length: ${content.length}`);\n\n// Return clean data format\nreturn {\n  json: {\n    platform: normalizedPlatform,\n    content: content,\n    originalData: webhookData,\n    timestamp: new Date().toISOString(),\n    // Extract optional fields\n    imageUrl: webhookData.imageUrl || null,\n    mediaUrl: webhookData.mediaUrl || null,\n    hashtags: webhookData.hashtags || [],\n    mentions: webhookData.mentions || [],\n    // Platform specific fields\n    instagramCaption: webhookData.instagramCaption || content,\n    telegramChatId: webhookData.telegramChatId || null\n  }\n};"
+      },
+      "id": "894c8f0c-f32c-4398-8416-7b5351f3685c",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -1540,
+        120
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "platform-x-condition",
+              "leftValue": "={{ $json.platform }}",
+              "rightValue": "x",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0060ff5f-f97a-4997-a1cc-74ab7c835c99",
+      "name": "Route Platform X",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -1340,
+        120
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "platform-facebook-condition",
+              "leftValue": "={{ $json.platform }}",
+              "rightValue": "facebook",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a16b0579-c778-4ae0-946f-1fc7cc5fad8a",
+      "name": "Route Platform Facebook",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -1140,
+        220
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "platform-linkedin-condition",
+              "leftValue": "={{ $json.platform }}",
+              "rightValue": "linkedin",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "edf3d3fd-34c4-4d3a-a861-54946672a560",
+      "name": "Route Platform LinkedIn",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -940,
+        320
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "platform-instagram-condition",
+              "leftValue": "={{ $json.platform }}",
+              "rightValue": "instagram",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a92c4e14-da35-4799-9a05-82c7d1a0ad53",
+      "name": "Route Platform Instagram",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -740,
+        420
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "platform-telegram-condition",
+              "leftValue": "={{ $json.platform }}",
+              "rightValue": "telegram",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "24a0635b-f02e-491d-9245-45e82031e58a",
+      "name": "Route Platform Telegram",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -540,
+        520
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "person": "fv35Eyee-b",
+        "text": "={{ $json.content }}",
+        "additionalFields": {
+          "visibility": "PUBLIC"
+        }
+      },
+      "id": "c4542f1b-1409-46d9-ada1-941e383948bd",
+      "name": "Publish on LinkedIn",
+      "type": "n8n-nodes-base.linkedIn",
+      "position": [
+        -740,
+        220
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "JJgMwwzXTJJzxC01",
+          "name": "LinkedIn account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Format success response for X (Twitter)\nconst result = $json;\n\nconsole.log('X/Twitter Raw Response:', JSON.stringify(result, null, 2));\n\n// X/Twitter API response format: {data: {id: '1234567890', text: '...'}} or direct {id: '1234567890'}\nconst postId = result?.data?.id || result?.id || null;\nconst isSuccess = !result.error && !result.errors && postId;\nconst errorMsg = result.error?.message || result.errors?.[0]?.title || result.detail || null;\n\nreturn {\n  json: {\n    platform: 'x',\n    success: isSuccess,\n    message: isSuccess ? 'Successfully published on X' : 'Failed to publish on X',\n    postId: postId,\n    postUrl: postId ? `https://twitter.com/i/web/status/${postId}` : null,\n    error: errorMsg,\n    rawResponse: result,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "e2a17698-51e3-4ee7-923a-bec3cdba0299",
+      "name": "Format X Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -900,
+        -20
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Format success response for Facebook\nconst result = $json;\n\nconsole.log('Facebook Raw Response:', JSON.stringify(result, null, 2));\n\n// Facebook Graph API response format: {id: 'page_id_post_id'} or {id: '123456789_987654321'}\nconst postId = result?.id || null;\nconst isSuccess = !result.error && postId;\nconst errorMsg = result.error?.message || result.error?.error_user_msg || null;\n\n// Facebook post URL format\nlet postUrl = null;\nif (postId) {\n  if (postId.includes('_')) {\n    // Format: page_id_post_id -> facebook.com/page_id/posts/post_id\n    const parts = postId.split('_');\n    postUrl = `https://facebook.com/${parts[0]}/posts/${parts[1]}`;\n  } else {\n    // Direct post ID\n    postUrl = `https://facebook.com/posts/${postId}`;\n  }\n}\n\nreturn {\n  json: {\n    platform: 'facebook',\n    success: isSuccess,\n    message: isSuccess ? 'Successfully published on Facebook' : 'Failed to publish on Facebook',\n    postId: postId,\n    postUrl: postUrl,\n    error: errorMsg,\n    rawResponse: result,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "0b39fe2f-3afc-433d-89dc-b58e585b6703",
+      "name": "Format Facebook Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -720,
+        80
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Format success response for LinkedIn\nconst result = $json;\n\nconsole.log('LinkedIn Raw Response:', JSON.stringify(result, null, 2));\n\n// LinkedIn API response formats:\n// Success: {id: 'urn:li:activity:1234567890'} or {urn: 'urn:li:activity:1234567890'} or {activity: 'urn:li:activity:1234567890'}\n// n8n LinkedIn node may return different field names\nconst activityId = result?.id || result?.urn || result?.activity || result?.activityId || null;\nconst isSuccess = !result.error && !result.errors && activityId;\nconst errorMsg = result.error?.message || result.errors?.[0]?.message || result.message || null;\n\n// Extract activity ID from URN format\nlet postId = activityId;\nlet postUrl = null;\nif (activityId) {\n  if (activityId.startsWith('urn:li:activity:')) {\n    const activityNum = activityId.replace('urn:li:activity:', '');\n    postUrl = `https://linkedin.com/feed/update/urn:li:activity:${activityNum}`;\n  } else {\n    // Direct activity number\n    postUrl = `https://linkedin.com/feed/update/urn:li:activity:${activityId}`;\n  }\n}\n\nreturn {\n  json: {\n    platform: 'linkedin',\n    success: isSuccess,\n    message: isSuccess ? 'Successfully published on LinkedIn' : 'Failed to publish on LinkedIn',\n    postId: postId,\n    postUrl: postUrl,\n    error: errorMsg,\n    rawResponse: result,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "50068611-9922-4550-bb97-07f446bec6a0",
+      "name": "Format LinkedIn Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -540,
+        180
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Format success response for Instagram\nconst result = $json;\n\nconsole.log('Instagram Raw Response:', JSON.stringify(result, null, 2));\n\n// Instagram API response format: {id: 'media_id'} for media creation, then need to publish\n// Also check for publish response: {id: 'published_media_id'}\nconst mediaId = result?.id || null;\nconst isSuccess = !result.error && mediaId;\nconst errorMsg = result.error?.message || result.error?.error_user_message || null;\n\n// Instagram media URL - note: actual Instagram post URLs require different format\n// For now, using placeholder format since we need actual post shortcode\nlet postUrl = null;\nif (mediaId) {\n  // Instagram post URLs need shortcode, not media ID\n  // This is a limitation - actual URL would need additional API call\n  postUrl = `https://instagram.com/p/${mediaId}`; // This might not work directly\n}\n\nreturn {\n  json: {\n    platform: 'instagram',\n    success: isSuccess,\n    message: isSuccess ? 'Successfully created Instagram media' : 'Failed to create Instagram media',\n    postId: mediaId,\n    postUrl: postUrl,\n    error: errorMsg,\n    rawResponse: result,\n    note: 'Instagram requires 2-step process: create media then publish',\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "03ce1fdb-0ed9-4f7e-add6-3f5683cdb379",
+      "name": "Format Instagram Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -340,
+        280
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Format success response for Telegram\nconst result = $json;\n\nconsole.log('Telegram Raw Response:', JSON.stringify(result, null, 2));\n\n// Telegram API response format: {message_id: 123, chat: {id: -123456789, type: 'channel'}, text: '...'}\nconst messageId = result?.message_id || null;\nconst chatId = result?.chat?.id || null;\nconst chatUsername = result?.chat?.username || null;\nconst isSuccess = !result.error && messageId;\nconst errorMsg = result.error?.description || result.error?.message || null;\n\n// Telegram message URL (for public channels/groups)\nlet postUrl = null;\nif (messageId && chatUsername) {\n  postUrl = `https://t.me/${chatUsername}/${messageId}`;\n} else if (messageId && chatId) {\n  // For private chats, we can't create a public URL\n  postUrl = `Telegram message ID: ${messageId} in chat: ${chatId}`;\n}\n\nreturn {\n  json: {\n    platform: 'telegram',\n    success: isSuccess,\n    message: isSuccess ? 'Successfully published on Telegram' : 'Failed to publish on Telegram',\n    messageId: messageId,\n    postId: messageId?.toString() || null,\n    chatId: chatId,\n    chatUsername: chatUsername,\n    postUrl: postUrl,\n    error: errorMsg,\n    rawResponse: result,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "e453dfd9-c2ef-4a58-bec5-24085c62ec9c",
+      "name": "Format Telegram Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -180,
+        380
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Platform not supported error\nconst input = $json;\n\nreturn {\n  json: {\n    success: false,\n    error: `Platform '${input.platform}' is not supported or routing failed`,\n    supportedPlatforms: ['x', 'facebook', 'linkedin', 'instagram', 'telegram'],\n    timestamp: new Date().toISOString(),\n    input: input\n  }\n};"
+      },
+      "id": "f6b4b642-a5dc-401d-9acd-6056a15a86f4",
+      "name": "Platform Not Supported",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -340,
+        620
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge all platform responses\nconst items = $input.all();\n\nif (items.length === 0) {\n  return {\n    json: {\n      success: false,\n      error: 'No platform responses received',\n      timestamp: new Date().toISOString()\n    }\n  };\n}\n\n// Take the first (and should be only) response\nconst response = items[0].json;\n\nreturn {\n  json: {\n    ...response,\n    webhookResponse: true\n  }\n};"
+      },
+      "id": "130707ca-afb7-4a7c-b971-c5689e2276db",
+      "name": "Merge Responses",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        80,
+        320
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Global error handler\nconst error = $json.error || $json;\nconst platform = $json.platform || 'unknown';\n\nreturn {\n  json: {\n    success: false,\n    platform: platform,\n    error: error.message || error.toString(),\n    errorType: 'validation_error',\n    timestamp: new Date().toISOString(),\n    supportedPlatforms: ['x', 'facebook', 'linkedin', 'instagram', 'telegram'],\n    requestHelp: 'Please check your request format: {\"platform\": \"x|facebook|linkedin|instagram|telegram\", \"content\": \"your message\"}'\n  }\n};"
+      },
+      "id": "9aae2aeb-022e-4ed1-bf3a-f5e9d489d7b8",
+      "name": "Global Error Handler",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -260,
+        80
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## 🚀 Webhook Social Media Publisher\n\n**✅ Sequential Platform Routing + Response Handling:**\n1️⃣ **X** → 2️⃣ **Facebook** → 3️⃣ **LinkedIn** → 4️⃣ **Instagram** → 5️⃣ **Telegram**\n\n**🔧 Fixed Issues:**\n✅ **Platform-specific response parsing**\n✅ **LinkedIn activityId detection** \n✅ **Facebook post URL generation**\n✅ **Debug logging for troubleshooting**\n✅ **Raw response included in output**\n\n**Webhook Format:**\n```json\n{\n  \"platform\": \"linkedin\",\n  \"content\": \"Your LinkedIn message\"\n}\n```\n\n**Expected Response:**\n```json\n{\n  \"success\": true,\n  \"platform\": \"linkedin\",\n  \"postId\": \"urn:li:activity:123\",\n  \"postUrl\": \"https://linkedin.com/feed/update/...\",\n  \"rawResponse\": {...}\n}\n```\n\nhttps://www.linkedin.com/in/samet-utku-olgun/",
+        "height": 620,
+        "width": 580,
+        "color": 2
+      },
+      "id": "16d592ad-1994-4594-8c2c-0ec64fd470a2",
+      "name": "Workflow Info",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1820,
+        -540
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "id": "207d3448-b9ed-40d9-b308-317c0b18709e",
+      "name": "Publish on X",
+      "type": "n8n-nodes-base.twitter",
+      "position": [
+        -1140,
+        20
+      ],
+      "typeVersion": 2,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v20.0",
+        "node": "me",
+        "edge": "feed",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "message",
+                "value": "={{ $json.content }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "32082d8a-f560-4394-ac60-36eb96ce0f4a",
+      "name": "Publish on Facebook",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "position": [
+        -940,
+        120
+      ],
+      "typeVersion": 1,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.instagram.com/v18.0/me/media",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "instagramBasicDisplayApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "image_url",
+              "value": "={{ $json.imageUrl || 'https://via.placeholder.com/1080x1080.png?text=Social+Post' }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $json.instagramCaption }}"
+            },
+            {
+              "name": "access_token",
+              "value": "={{ $credentials.instagramBasicDisplayApi.accessToken }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "4cf26bba-1b9b-467e-8ccf-991a9cbb0002",
+      "name": "Publish on Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -540,
+        320
+      ],
+      "typeVersion": 4.2,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegramChatId || '@your_channel' }}",
+        "text": "={{ $json.content }}",
+        "additionalFields": {}
+      },
+      "id": "62996fa4-5259-4876-8e37-a5a7a4096477",
+      "name": "Publish on Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -340,
+        460
+      ],
+      "typeVersion": 1.2,
+      "webhookId": "65ce0062-3b0d-49a5-aedb-35652ad76999",
+      "continueOnFail": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Social Media Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Route Platform X",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Platform X": {
+      "main": [
+        [
+          {
+            "node": "Publish on X",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route Platform Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Platform Facebook": {
+      "main": [
+        [
+          {
+            "node": "Publish on Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route Platform LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Platform LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Publish on LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route Platform Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Platform Instagram": {
+      "main": [
+        [
+          {
+            "node": "Publish on Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route Platform Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Platform Telegram": {
+      "main": [
+        [
+          {
+            "node": "Publish on Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Platform Not Supported",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish on LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Format LinkedIn Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format X Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Responses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Facebook Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Responses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format LinkedIn Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Responses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Instagram Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Responses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Telegram Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Responses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Platform Not Supported": {
+      "main": [
+        [
+          {
+            "node": "Merge Responses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Global Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Merge Responses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish on X": {
+      "main": [
+        [
+          {
+            "node": "Format X Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish on Facebook": {
+      "main": [
+        [
+          {
+            "node": "Format Facebook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish on Instagram": {
+      "main": [
+        [
+          {
+            "node": "Format Instagram Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish on Telegram": {
+      "main": [
+        [
+          {
+            "node": "Format Telegram Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "66dd9c50-0881-4219-a36c-4e9f026c682e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e7bec810e9ab34e0b982f739c4cab1fe1212163593af59d389a2b8ada64fd633"
+  },
+  "id": "hnHpBZMQyqsNOY7U",
+  "tags": [
+    {
+      "createdAt": "2025-07-19T18:41:29.883Z",
+      "updatedAt": "2025-07-19T18:41:29.883Z",
+      "id": "Lp3pb0CAQy00rlVx",
+      "name": "Social Media Automation"
+    },
+    {
+      "createdAt": "2025-07-19T18:41:29.889Z",
+      "updatedAt": "2025-07-19T18:41:29.889Z",
+      "id": "jX7noHGNVUE0jl1L",
+      "name": "Multi Platform"
+    },
+    {
+      "createdAt": "2025-07-19T18:41:29.887Z",
+      "updatedAt": "2025-07-19T18:41:29.887Z",
+      "id": "y90iuhB7PLioloep",
+      "name": "Webhook Publisher"
+    }
+  ]
+}

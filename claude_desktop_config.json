@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "social-media-content-remote": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://127.0.0.1:5555/mcp"]
+    }
+  }
+} 
