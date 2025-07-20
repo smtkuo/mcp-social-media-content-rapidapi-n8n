@@ -2,12 +2,11 @@
   "name": "social-media-content-mcp-server",
   "version": "1.0.0",
   "description": "MCP Server for Social Media Content Generation using RapidAPI",
-  "main": "server.js",
+  "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --inspect server.js",
-    "http": "set MCP_PORT=5555&& node server.js"
+    "start": "node src/index.js",
+    "dev": "node --inspect src/index.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

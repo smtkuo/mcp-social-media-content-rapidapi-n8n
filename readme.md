@@ -73,19 +73,14 @@ Add the server configuration to your Claude Desktop config:
 
 ## 🚀 Running the MCP Server
 
-### HTTP Mode (Recommended)
-```bash
-npm run http
-```
-
-### Development Mode
-```bash
-npm run dev
-```
-
-### Standard Mode
+### Production Mode (Default)
 ```bash
 npm start
+```
+
+### Development Mode with Inspector
+```bash
+npm run dev
 ```
 
 ## 🤖 Using MCP Server in Claude
